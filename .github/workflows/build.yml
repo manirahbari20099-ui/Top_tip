@@ -20,19 +20,19 @@ jobs:
       # 1. Checkout
       # ==========================================
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v5
 
       # ==========================================
-      # 2. Node.js 24
+      # 2. Node.js
       # ==========================================
       - name: Setup Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@v5
         with:
           node-version: '24'
           package-manager-cache: false
 
       # ==========================================
-      # 3. Java 21
+      # 3. Java
       # ==========================================
       - name: Setup Java
         uses: actions/setup-java@v5
@@ -45,15 +45,15 @@ jobs:
       # ==========================================
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
-        with:
-          packages: 'platform-tools platforms;android-36'
 
       # ==========================================
       # 5. Create Node project
       # ==========================================
       - name: Create package.json
         run: |
-          npm init -y
+          if [ ! -f package.json ]; then
+            npm init -y
+          fi
 
       # ==========================================
       # 6. Install Capacitor
@@ -63,22 +63,21 @@ jobs:
           npm install @capacitor/core @capacitor/cli @capacitor/android
 
       # ==========================================
-      # 7. Prepare HTML
+      # 7. Prepare Web App
       # ==========================================
       - name: Prepare Web App
         run: |
-          rm -rf www
-          mkdir -p www
-
           if [ ! -f index.html ]; then
             echo "ERROR: index.html was not found."
             exit 1
           fi
 
+          rm -rf www
+          mkdir -p www
           cp index.html www/index.html
 
       # ==========================================
-      # 8. Capacitor configuration
+      # 8. Capacitor Configuration
       # ==========================================
       - name: Create Capacitor Config
         run: |
@@ -86,53 +85,40 @@ jobs:
           {
             "appId": "com.doz.game",
             "appName": "DOZ",
-            "webDir": "www",
-            "bundledWebRuntime": false
+            "webDir": "www"
           }
           EOF
 
       # ==========================================
       # 9. Add Android
       # ==========================================
-      - name: Add Android Platform
+      - name: Add Android
         run: |
           npx cap add android
 
       # ==========================================
       # 10. Sync
       # ==========================================
-      - name: Sync Capacitor
+      - name: Sync Android
         run: |
           npx cap sync android
 
       # ==========================================
       # 11. Generate DOZ Launcher Icon
       # ==========================================
-      - name: Generate DOZ Launcher Icon
+      - name: Generate DOZ Icon
         run: |
           mkdir -p android/app/src/main/res/drawable
           mkdir -p android/app/src/main/res/mipmap-anydpi-v26
-          mkdir -p android/app/src/main/res/mipmap-mdpi
-          mkdir -p android/app/src/main/res/mipmap-hdpi
-          mkdir -p android/app/src/main/res/mipmap-xhdpi
-          mkdir -p android/app/src/main/res/mipmap-xxhdpi
-          mkdir -p android/app/src/main/res/mipmap-xxxhdpi
 
-          # ------------------------------------------
-          # Adaptive icon background
-          # ------------------------------------------
           cat > android/app/src/main/res/drawable/ic_launcher_background.xml <<'EOF'
           <?xml version="1.0" encoding="utf-8"?>
           <shape xmlns:android="http://schemas.android.com/apk/res/android"
               android:shape="rectangle">
-              <solid android:color="#6C63FF" />
+              <solid android:color="#6C63FF"/>
           </shape>
           EOF
 
-          # ------------------------------------------
-          # DOZ foreground logo
-          # X + O inside a game board
-          # ------------------------------------------
           cat > android/app/src/main/res/drawable/ic_launcher_foreground.xml <<'EOF'
           <?xml version="1.0" encoding="utf-8"?>
           <vector xmlns:android="http://schemas.android.com/apk/res/android"
@@ -141,208 +127,50 @@ jobs:
               android:viewportWidth="108"
               android:viewportHeight="108">
 
-              <!-- Dark game board -->
               <path
                   android:fillColor="#10101F"
-                  android:pathData="M18,18 L90,18 L90,90 L18,90 Z" />
+                  android:pathData="M18,18 L90,18 L90,90 L18,90 Z"/>
 
-              <!-- Board lines -->
               <path
                   android:strokeColor="#FFFFFF"
                   android:strokeAlpha="0.35"
                   android:strokeWidth="3"
                   android:fillColor="@android:color/transparent"
-                  android:pathData="M42,20 L42,88 M66,20 L66,88 M20,42 L88,42 M20,66 L88,66" />
+                  android:pathData="M42,20 L42,88 M66,20 L66,88 M20,42 L88,42 M20,66 L88,66"/>
 
-              <!-- Red X -->
               <path
                   android:strokeColor="#FF4D5A"
                   android:strokeWidth="7"
                   android:strokeLineCap="round"
                   android:fillColor="@android:color/transparent"
-                  android:pathData="M27,27 L51,51 M51,27 L27,51" />
+                  android:pathData="M27,27 L51,51 M51,27 L27,51"/>
 
-              <!-- Blue O -->
               <path
                   android:strokeColor="#35A7FF"
                   android:strokeWidth="7"
                   android:fillColor="@android:color/transparent"
-                  android:pathData="M57,57 C57,49 63,43 71,43 C79,43 85,49 85,57 C85,65 79,71 71,71 C63,71 57,65 57,57 Z" />
-
-              <!-- Small highlight -->
-              <path
-                  android:fillColor="#FFFFFF"
-                  android:fillAlpha="0.75"
-                  android:pathData="M25,22 C25,20 27,19 29,19 C31,19 32,20 32,22 C32,24 31,25 29,25 C27,25 25,24 25,22 Z" />
-
+                  android:pathData="M57,57 C57,49 63,43 71,43 C79,43 85,49 85,57 C85,65 79,71 71,71 C63,71 57,65 57,57 Z"/>
           </vector>
           EOF
 
-          # ------------------------------------------
-          # Adaptive icon
-          # ------------------------------------------
           cat > android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml <<'EOF'
           <?xml version="1.0" encoding="utf-8"?>
           <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-              <background android:drawable="@drawable/ic_launcher_background" />
-              <foreground android:drawable="@drawable/ic_launcher_foreground" />
-              <monochrome android:drawable="@drawable/ic_launcher_foreground" />
+              <background android:drawable="@drawable/ic_launcher_background"/>
+              <foreground android:drawable="@drawable/ic_launcher_foreground"/>
           </adaptive-icon>
           EOF
 
-          # ------------------------------------------
-          # Round adaptive icon
-          # ------------------------------------------
           cat > android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml <<'EOF'
           <?xml version="1.0" encoding="utf-8"?>
           <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-              <background android:drawable="@drawable/ic_launcher_background" />
-              <foreground android:drawable="@drawable/ic_launcher_foreground" />
-              <monochrome android:drawable="@drawable/ic_launcher_foreground" />
+              <background android:drawable="@drawable/ic_launcher_background"/>
+              <foreground android:drawable="@drawable/ic_launcher_foreground"/>
           </adaptive-icon>
           EOF
 
       # ==========================================
-      # 12. Generate legacy PNG launcher icons
-      # ==========================================
-      - name: Generate Legacy Launcher PNGs
-        run: |
-          python3 -m pip install --quiet pillow
-
-          python3 <<'PY'
-          from PIL import Image, ImageDraw
-
-          sizes = {
-              "mipmap-mdpi": 48,
-              "mipmap-hdpi": 72,
-              "mipmap-xhdpi": 96,
-              "mipmap-xxhdpi": 144,
-              "mipmap-xxxhdpi": 192
-          }
-
-          for folder, size in sizes.items():
-
-              img = Image.new(
-                  "RGBA",
-                  (size, size),
-                  (108, 99, 255, 255)
-              )
-
-              draw = ImageDraw.Draw(img)
-
-              # Rounded game background
-              margin = int(size * 0.08)
-
-              draw.rounded_rectangle(
-                  [
-                      margin,
-                      margin,
-                      size - margin,
-                      size - margin
-                  ],
-                  radius=int(size * 0.20),
-                  fill=(16, 16, 31, 255)
-              )
-
-              # Board lines
-              line = max(2, int(size * 0.035))
-
-              draw.line(
-                  [
-                      int(size * 0.43),
-                      int(size * 0.18),
-                      int(size * 0.43),
-                      int(size * 0.82)
-                  ],
-                  fill=(255,255,255,90),
-                  width=line
-              )
-
-              draw.line(
-                  [
-                      int(size * 0.57),
-                      int(size * 0.18),
-                      int(size * 0.57),
-                      int(size * 0.82)
-                  ],
-                  fill=(255,255,255,90),
-                  width=line
-              )
-
-              draw.line(
-                  [
-                      int(size * 0.18),
-                      int(size * 0.43),
-                      int(size * 0.82),
-                      int(size * 0.43)
-                  ],
-                  fill=(255,255,255,90),
-                  width=line
-              )
-
-              draw.line(
-                  [
-                      int(size * 0.18),
-                      int(size * 0.57),
-                      int(size * 0.82),
-                      int(size * 0.57)
-                  ],
-                  fill=(255,255,255,90),
-                  width=line
-              )
-
-              # X
-              w = max(2, int(size * 0.07))
-
-              draw.line(
-                  [
-                      int(size * 0.28),
-                      int(size * 0.28),
-                      int(size * 0.47),
-                      int(size * 0.47)
-                  ],
-                  fill=(255,77,90,255),
-                  width=w
-              )
-
-              draw.line(
-                  [
-                      int(size * 0.47),
-                      int(size * 0.28),
-                      int(size * 0.28),
-                      int(size * 0.47)
-                  ],
-                  fill=(255,77,90,255),
-                  width=w
-              )
-
-              # O
-              draw.ellipse(
-                  [
-                      int(size * 0.53),
-                      int(size * 0.53),
-                      int(size * 0.76),
-                      int(size * 0.76)
-                  ],
-                  outline=(53,167,255,255),
-                  width=w
-              )
-
-              img.save(
-                  f"android/app/src/main/res/{folder}/ic_launcher.png",
-                  "PNG"
-              )
-
-              img.save(
-                  f"android/app/src/main/res/{folder}/ic_launcher_round.png",
-                  "PNG"
-              )
-
-          print("DOZ launcher icons generated.")
-          PY
-
-      # ==========================================
-      # 13. Set App Name and Launcher Icon
+      # 12. Configure Android Manifest
       # ==========================================
       - name: Configure Android App
         run: |
@@ -350,10 +178,7 @@ jobs:
           from pathlib import Path
           import re
 
-          manifest = Path(
-              "android/app/src/main/AndroidManifest.xml"
-          )
-
+          manifest = Path("android/app/src/main/AndroidManifest.xml")
           text = manifest.read_text()
 
           text = re.sub(
@@ -370,9 +195,7 @@ jobs:
 
           manifest.write_text(text)
 
-          strings = Path(
-              "android/app/src/main/res/values/strings.xml"
-          )
+          strings = Path("android/app/src/main/res/values/strings.xml")
 
           if strings.exists():
               text = strings.read_text()
@@ -385,69 +208,43 @@ jobs:
 
               strings.write_text(text)
 
-          print("App name: DOZ")
-          print("Launcher icon: DOZ")
+          print("DOZ Android configuration complete.")
           PY
 
       # ==========================================
-      # 14. Configure Android SDK / Version
+      # 13. Configure Stable Application ID
       # ==========================================
-      - name: Configure Android Build
+      - name: Configure Application ID
         run: |
           python3 <<'PY'
           from pathlib import Path
           import re
 
           path = Path("android/app/build.gradle")
-
-          if not path.exists():
-              raise SystemExit("android/app/build.gradle was not found.")
-
           text = path.read_text()
 
-          # compile SDK
           text = re.sub(
-              r'compileSdk(?:Version)?\s+\S+',
-              'compileSdkVersion 36',
+              r'applicationId\s+"[^"]+"',
+              'applicationId "com.doz.game"',
               text,
               count=1
           )
-
-          # target SDK
-          text = re.sub(
-              r'targetSdk(?:Version)?\s+\S+',
-              'targetSdkVersion 36',
-              text,
-              count=1
-          )
-
-          # If targetSdk wasn't present
-          if not re.search(r'targetSdk(?:Version)?\s+36', text):
-              text = text.replace(
-                  'defaultConfig {',
-                  'defaultConfig {\n        targetSdkVersion 36',
-                  1
-              )
 
           path.write_text(text)
           PY
 
       # ==========================================
-      # 15. Generate increasing versionCode
+      # 14. Generate Increasing Version
       # ==========================================
-      - name: Set App Version
+      - name: Set Version
         run: |
-          VERSION_CODE="${GITHUB_RUN_NUMBER}"
-
-          if [ "$VERSION_CODE" -lt 1 ]; then
-            VERSION_CODE=1
-          fi
+          VERSION_CODE=$((GITHUB_RUN_NUMBER + 1))
 
           echo "VERSION_CODE=$VERSION_CODE" >> "$GITHUB_ENV"
 
           echo "DOZ versionCode: $VERSION_CODE"
 
-      - name: Apply App Version
+      - name: Apply Version
         run: |
           python3 <<'PY'
           from pathlib import Path
@@ -468,9 +265,9 @@ jobs:
               )
           else:
               text = text.replace(
-                  'defaultConfig {',
-                  f'defaultConfig {{\n'
-                  f'        versionCode {version_code}',
+                  "defaultConfig {",
+                  f"defaultConfig {{\n"
+                  f"        versionCode {version_code}",
                   1
               )
 
@@ -483,7 +280,7 @@ jobs:
               )
           else:
               text = text.replace(
-                  f'versionCode {version_code}',
+                  f"versionCode {version_code}",
                   f'versionCode {version_code}\n'
                   f'        versionName "1.0"',
                   1
@@ -493,9 +290,9 @@ jobs:
           PY
 
       # ==========================================
-      # 16. Restore fixed signing key
+      # 15. Restore Release Keystore
       # ==========================================
-      - name: Restore Release Keystore
+      - name: Restore Keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
@@ -506,14 +303,17 @@ jobs:
 
           echo "$KEYSTORE_BASE64" | base64 --decode > android/release.keystore
 
-          test -s android/release.keystore
+          if [ ! -s android/release.keystore ]; then
+            echo "ERROR: Keystore file is empty."
+            exit 1
+          fi
 
-          echo "Release keystore restored."
+          echo "Keystore restored successfully."
 
       # ==========================================
-      # 17. Configure Signing
+      # 16. Configure Signing
       # ==========================================
-      - name: Configure Release Signing
+      - name: Configure Signing
         env:
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
@@ -535,8 +335,7 @@ jobs:
           path = Path("android/app/build.gradle")
           text = path.read_text()
 
-          if "keystorePropertiesFile" not in text:
-              signing_code = r'''
+          signing_loader = '''
           def keystorePropertiesFile = rootProject.file("keystore.properties")
           def keystoreProperties = new Properties()
 
@@ -545,74 +344,73 @@ jobs:
           }
           '''
 
-              text = signing_code + "\n" + text
+          if "keystorePropertiesFile" not in text:
+              text = signing_loader + "\n" + text
 
           if "signingConfigs {" not in text:
               text = text.replace(
                   "android {",
-                  """android {
+                  '''android {
               signingConfigs {
                   release {
-                      storeFile file(keystoreProperties['storeFile'])
-                      storePassword keystoreProperties['storePassword']
-                      keyAlias keystoreProperties['keyAlias']
-                      keyPassword keystoreProperties['keyPassword']
+                      storeFile file(keystoreProperties["storeFile"])
+                      storePassword keystoreProperties["storePassword"]
+                      keyAlias keystoreProperties["keyAlias"]
+                      keyPassword keystoreProperties["keyPassword"]
                   }
-              }""",
+              }
+              ''',
                   1
               )
 
-          text = text.replace(
-              "buildTypes {",
-              """buildTypes {
+          if "signingConfig signingConfigs.release" not in text:
+              text = text.replace(
+                  "buildTypes {",
+                  '''buildTypes {
               release {
                   signingConfig signingConfigs.release
-              }""",
-              1
-          )
+              }
+              ''',
+                  1
+              )
 
           path.write_text(text)
           PY
 
       # ==========================================
-      # 18. Build Release APK
+      # 17. Build Release APK
       # ==========================================
       - name: Build Release APK
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew --no-daemon clean assembleRelease
+          ./gradlew --no-daemon assembleRelease
 
       # ==========================================
-      # 19. Verify APK
+      # 18. Verify APK
       # ==========================================
       - name: Verify APK
         run: |
           APK="android/app/build/outputs/apk/release/app-release.apk"
 
           if [ ! -f "$APK" ]; then
-            echo "ERROR: Release APK was not created."
+            echo "ERROR: APK was not created."
             exit 1
           fi
 
-          echo "APK created successfully:"
+          echo "APK successfully created:"
           ls -lh "$APK"
 
       # ==========================================
-      # 20. Prepare final APK
+      # 19. Prepare APK
       # ==========================================
       - name: Prepare APK
         run: |
           mkdir -p output
-
-          cp \
-            android/app/build/outputs/apk/release/app-release.apk \
-            output/DOZ.apk
-
-          ls -lh output/DOZ.apk
+          cp android/app/build/outputs/apk/release/app-release.apk output/DOZ.apk
 
       # ==========================================
-      # 21. Upload APK
+      # 20. Upload APK
       # ==========================================
       - name: Upload DOZ APK
         uses: actions/upload-artifact@v4
@@ -622,7 +420,7 @@ jobs:
           if-no-files-found: error
 
       # ==========================================
-      # 22. Cleanup signing files
+      # 21. Cleanup
       # ==========================================
       - name: Cleanup Signing Files
         if: always()
