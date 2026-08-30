@@ -192,7 +192,7 @@ jobs:
           </vector>
           EOF
 
-      - name: Fix Android build files with auto-increment version
+      - name: Fix build.gradle with correct syntax
         run: |
           # دریافت تاریخ و زمان برای versionCode خودکار
           VERSION_CODE=$(date +%Y%m%d%H%M)
@@ -201,16 +201,16 @@ jobs:
           echo "Version Code: $VERSION_CODE"
           echo "Version Name: $VERSION_NAME"
 
-          # اصلاح build.gradle و اضافه کردن namespace
+          # اصلاح build.gradle با سینتکس صحیح
           cat > android/app/build.gradle <<EOF
           apply plugin: 'com.android.application'
 
           android {
-              namespace "com.tictactoe.game"
+              namespace 'com.tictactoe.game'
               compileSdk 34
 
               defaultConfig {
-                  applicationId "com.tictactoe.game"
+                  applicationId 'com.tictactoe.game'
                   minSdk 23
                   targetSdk 34
                   versionCode $VERSION_CODE
@@ -252,7 +252,8 @@ jobs:
           cat > android/app/src/main/AndroidManifest.xml <<'EOF'
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:tools="http://schemas.android.com/tools">
+              xmlns:tools="http://schemas.android.com/tools"
+              package="com.tictactoe.game">
               <application
                   android:allowBackup="true"
                   android:icon="@mipmap/ic_launcher"
@@ -288,6 +289,7 @@ jobs:
 
       - name: Fix strings.xml
         run: |
+          mkdir -p android/app/src/main/res/values
           cat > android/app/src/main/res/values/strings.xml <<'EOF'
           <?xml version='1.0' encoding='utf-8'?>
           <resources>
