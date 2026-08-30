@@ -16,55 +16,34 @@ jobs:
 
     steps:
 
-      # ==========================================
-      # 1. Checkout
-      # ==========================================
       - name: Checkout
         uses: actions/checkout@v5
 
-      # ==========================================
-      # 2. Node.js
-      # ==========================================
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
           node-version: '24'
           package-manager-cache: false
 
-      # ==========================================
-      # 3. Java
-      # ==========================================
       - name: Setup Java
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
 
-      # ==========================================
-      # 4. Android SDK
-      # ==========================================
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
 
-      # ==========================================
-      # 5. Create Node project
-      # ==========================================
       - name: Create package.json
         run: |
           if [ ! -f package.json ]; then
             npm init -y
           fi
 
-      # ==========================================
-      # 6. Install Capacitor
-      # ==========================================
       - name: Install Capacitor
         run: |
           npm install @capacitor/core @capacitor/cli @capacitor/android
 
-      # ==========================================
-      # 7. Prepare Web App
-      # ==========================================
       - name: Prepare Web App
         run: |
           if [ ! -f index.html ]; then
@@ -76,9 +55,6 @@ jobs:
           mkdir -p www
           cp index.html www/index.html
 
-      # ==========================================
-      # 8. Capacitor Configuration
-      # ==========================================
       - name: Create Capacitor Config
         run: |
           cat > capacitor.config.json <<'EOF'
@@ -89,22 +65,16 @@ jobs:
           }
           EOF
 
-      # ==========================================
-      # 9. Add Android
-      # ==========================================
       - name: Add Android
         run: |
           npx cap add android
 
-      # ==========================================
-      # 10. Sync
-      # ==========================================
       - name: Sync Android
         run: |
           npx cap sync android
 
       # ==========================================
-      # 11. Generate DOZ Launcher Icon
+      # DOZ APP ICON
       # ==========================================
       - name: Generate DOZ Icon
         run: |
@@ -169,9 +139,6 @@ jobs:
           </adaptive-icon>
           EOF
 
-      # ==========================================
-      # 12. Configure Android Manifest
-      # ==========================================
       - name: Configure Android App
         run: |
           python3 <<'PY'
@@ -181,17 +148,25 @@ jobs:
           manifest = Path("android/app/src/main/AndroidManifest.xml")
           text = manifest.read_text()
 
-          text = re.sub(
-              r'android:icon="[^"]+"',
-              'android:icon="@mipmap/ic_launcher"',
-              text
-          )
+          if 'android:icon=' in text:
+              text = re.sub(
+                  r'android:icon="[^"]+"',
+                  'android:icon="@mipmap/ic_launcher"',
+                  text
+              )
+          else:
+              text = text.replace(
+                  '<application',
+                  '<application android:icon="@mipmap/ic_launcher"',
+                  1
+              )
 
-          text = re.sub(
-              r'android:roundIcon="[^"]+"',
-              'android:roundIcon="@mipmap/ic_launcher_round"',
-              text
-          )
+          if 'android:roundIcon=' in text:
+              text = re.sub(
+                  r'android:roundIcon="[^"]+"',
+                  'android:roundIcon="@mipmap/ic_launcher_round"',
+                  text
+              )
 
           manifest.write_text(text)
 
@@ -207,12 +182,10 @@ jobs:
               )
 
               strings.write_text(text)
-
-          print("DOZ Android configuration complete.")
           PY
 
       # ==========================================
-      # 13. Configure Stable Application ID
+      # STABLE APP ID
       # ==========================================
       - name: Configure Application ID
         run: |
@@ -234,14 +207,12 @@ jobs:
           PY
 
       # ==========================================
-      # 14. Generate Increasing Version
+      # INCREASING VERSION CODE
       # ==========================================
       - name: Set Version
         run: |
           VERSION_CODE=$((GITHUB_RUN_NUMBER + 1))
-
           echo "VERSION_CODE=$VERSION_CODE" >> "$GITHUB_ENV"
-
           echo "DOZ versionCode: $VERSION_CODE"
 
       - name: Apply Version
@@ -290,7 +261,7 @@ jobs:
           PY
 
       # ==========================================
-      # 15. Restore Release Keystore
+      # RESTORE KEYSTORE
       # ==========================================
       - name: Restore Keystore
         env:
@@ -301,9 +272,9 @@ jobs:
             exit 1
           fi
 
-          echo "$KEYSTORE_BASE64" | base64 --decode > android/release.keystore
+          echo "$KEYSTORE_BASE64" | base64 --decode > android/app/release.keystore
 
-          if [ ! -s android/release.keystore ]; then
+          if [ ! -s android/app/release.keystore ]; then
             echo "ERROR: Keystore file is empty."
             exit 1
           fi
@@ -311,7 +282,7 @@ jobs:
           echo "Keystore restored successfully."
 
       # ==========================================
-      # 16. Configure Signing
+      # SIGNING
       # ==========================================
       - name: Configure Signing
         env:
@@ -347,10 +318,7 @@ jobs:
           if "keystorePropertiesFile" not in text:
               text = signing_loader + "\n" + text
 
-          if "signingConfigs {" not in text:
-              text = text.replace(
-                  "android {",
-                  '''android {
+          signing_block = '''
               signingConfigs {
                   release {
                       storeFile file(keystoreProperties["storeFile"])
@@ -359,7 +327,12 @@ jobs:
                       keyPassword keystoreProperties["keyPassword"]
                   }
               }
-              ''',
+          '''
+
+          if "signingConfigs {" not in text:
+              text = text.replace(
+                  "android {",
+                  "android {" + signing_block,
                   1
               )
 
@@ -367,9 +340,9 @@ jobs:
               text = text.replace(
                   "buildTypes {",
                   '''buildTypes {
-              release {
-                  signingConfig signingConfigs.release
-              }
+                  release {
+                      signingConfig signingConfigs.release
+                  }
               ''',
                   1
               )
@@ -378,7 +351,7 @@ jobs:
           PY
 
       # ==========================================
-      # 17. Build Release APK
+      # BUILD APK
       # ==========================================
       - name: Build Release APK
         working-directory: android
@@ -387,7 +360,7 @@ jobs:
           ./gradlew --no-daemon assembleRelease
 
       # ==========================================
-      # 18. Verify APK
+      # VERIFY APK
       # ==========================================
       - name: Verify APK
         run: |
@@ -402,7 +375,7 @@ jobs:
           ls -lh "$APK"
 
       # ==========================================
-      # 19. Prepare APK
+      # PREPARE APK
       # ==========================================
       - name: Prepare APK
         run: |
@@ -410,7 +383,7 @@ jobs:
           cp android/app/build/outputs/apk/release/app-release.apk output/DOZ.apk
 
       # ==========================================
-      # 20. Upload APK
+      # UPLOAD APK
       # ==========================================
       - name: Upload DOZ APK
         uses: actions/upload-artifact@v4
@@ -420,10 +393,10 @@ jobs:
           if-no-files-found: error
 
       # ==========================================
-      # 21. Cleanup
+      # CLEANUP
       # ==========================================
       - name: Cleanup Signing Files
         if: always()
         run: |
-          rm -f android/release.keystore
+          rm -f android/app/release.keystore
           rm -f android/keystore.properties
