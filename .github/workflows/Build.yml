@@ -29,10 +29,13 @@ jobs:
         with:
           distribution: "temurin"
           java-version: "21"
-          # حذف گزینه cache
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+
+      - name: Install Pillow (Python imaging library)
+        run: |
+          pip install Pillow
 
       - name: Create web directory
         run: |
