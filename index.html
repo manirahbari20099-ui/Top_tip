@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 Tic-Tac-Toe / دوز</title>
+    <style>
+        /* ===== RESET & BASE ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', 'Vazir', Tahoma, sans-serif;
+            background: radial-gradient(ellipse at center, #1a1a2e, #0f0f1a);
+            padding: 20px;
+            transition: background 0.5s;
+        }
+
+        /* ===== CONTAINER ===== */
+        .game-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 40px;
+            padding: 35px;
+            max-width: 550px;
+            width: 100%;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .title h1 {
+            color: #fff;
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 20px rgba(100, 100, 255, 0.3);
+        }
+
+        .title .icon {
+            font-size: 30px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .lang-toggle {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .lang-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        /* ===== MODE SELECTOR ===== */
+        .mode-selector {
+            display: flex;
+            gap: 8px;
+            margin: 12px 0;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 6px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.5);
+            font-family: inherit;
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+            transform: scale(1.02);
+        }
+
+        .mode-btn:hover:not(.active) {
+            color: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* ===== TURN INDICATOR ===== */
+        .turn-indicator {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 18px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 16px;
+            margin: 12px 0;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .turn-text {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .turn-player {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .turn-player .badge {
+            padding: 4px 14px;
+            border-radius: 12px;
+            font-size: 14px;
+        }
+
+        .badge.x-badge { background: rgba(231, 76, 60, 0.3); color: #e74c3c; }
+        .badge.o-badge { background: rgba(52, 152, 219, 0.3); color: #3498db; }
+
+        /* ===== BOARD ===== */
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px;
+            border-radius: 24px;
+            margin: 12px 0;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .cell {
+            aspect-ratio: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 18px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 64px;
+            font-weight: 900;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            border: 2px solid rgba(255, 255, 255, 0.05);
+            min-height: 100px;
+        }
+
+        .cell:hover:not(.taken):not(.game-over) {
+            background: rgba(255, 255, 255, 0.12);
+            transform: scale(1.03);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .cell.taken {
+            cursor: not-allowed;
+        }
+
+        .cell.game-over {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .cell.x {
+            color: #e74c3c;
+            text-shadow: 0 0 40px rgba(231, 76, 60, 0.3);
+        }
+
+        .cell.o {
+            color: #3498db;
+            text-shadow: 0 0 40px rgba(52, 152, 219, 0.3);
+        }
+
+        .cell.winner {
+            background: rgba(46, 204, 113, 0.25) !important;
+            border-color: #2ecc71 !important;
+            animation: pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 0 50px rgba(46, 204, 113, 0.15);
+            transform: scale(1.05);
+        }
+
+        .cell.winner.x { color: #2ecc71; text-shadow: 0 0 60px rgba(46, 204, 113, 0.4); }
+        .cell.winner.o { color: #2ecc71; text-shadow: 0 0 60px rgba(46, 204, 113, 0.4); }
+
+        @keyframes pop {
+            0% { transform: scale(0.7); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1.05); }
+        }
+
+        .cell .cell-glow {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 18px;
+            pointer-events: none;
+            opacity: 0;
+            transition: 0.3s;
+        }
+
+        .cell.x .cell-glow { background: radial-gradient(circle, rgba(231,76,60,0.15), transparent); }
+        .cell.o .cell-glow { background: radial-gradient(circle, rgba(52,152,219,0.15), transparent); }
+        .cell:not(.taken) .cell-glow { opacity: 0; }
+
+        /* ===== STATUS ===== */
+        .status {
+            padding: 14px 18px;
+            border-radius: 16px;
+            margin: 12px 0;
+            font-size: 16px;
+            font-weight: 700;
+            text-align: center;
+            min-height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: 0.4s;
+        }
+
+        .status.win {
+            background: rgba(46, 204, 113, 0.15);
+            border-color: rgba(46, 204, 113, 0.3);
+            color: #2ecc71;
+        }
+
+        .status.draw {
+            background: rgba(241, 196, 15, 0.15);
+            border-color: rgba(241, 196, 15, 0.3);
+            color: #f1c40f;
+        }
+
+        .status.turn {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* ===== SCORE ===== */
+        .score {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 12px 0;
+        }
+
+        .score-item {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 18px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .score-item .num {
+            font-size: 20px;
+            min-width: 24px;
+            text-align: center;
+        }
+
+        .score-item.x-score .num { color: #e74c3c; }
+        .score-item.o-score .num { color: #3498db; }
+        .score-item.draw-score .num { color: #f1c40f; }
+
+        /* ===== BUTTONS ===== */
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 16px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            box-shadow: 0 4px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 35px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: scale(0.95) !important;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 500px) {
+            .game-container { padding: 20px; }
+            .title h1 { font-size: 20px; }
+            .cell { font-size: 44px; min-height: 70px; }
+            .board { gap: 8px; padding: 8px; }
+            .score-item { font-size: 13px; padding: 6px 12px; }
+            .turn-player { font-size: 16px; }
+            .mode-btn { font-size: 12px; padding: 8px 10px; }
+            .btn { font-size: 13px; padding: 12px 14px; }
+        }
+
+        @media (max-width: 380px) {
+            .cell { font-size: 34px; min-height: 55px; }
+            .game-container { padding: 14px; }
+            .header { flex-direction: column; gap: 8px; }
+            .lang-toggle { align-self: stretch; }
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <!-- HEADER -->
+    <div class="header">
+        <div class="title">
+            <span class="icon">🎮</span>
+            <h1 id="mainTitle">دوز</h1>
+        </div>
+        <button class="lang-toggle" id="langToggle">🇬🇧 English</button>
+    </div>
+
+    <!-- MODE SELECTOR -->
+    <div class="mode-selector">
+        <button class="mode-btn active" data-mode="2player" id="mode2p">👥 ۲ نفره</button>
+        <button class="mode-btn" data-mode="robot" id="modeRobot">🤖 با ربات</button>
+    </div>
+
+    <!-- TURN INDICATOR -->
+    <div class="turn-indicator">
+        <span class="turn-text" id="turnLabel">نوبت:</span>
+        <div class="turn-player">
+            <span id="turnSymbol">❌</span>
+            <span class="badge x-badge" id="turnBadge">بازیکن ۱</span>
+        </div>
+    </div>
+
+    <!-- BOARD -->
+    <div class="board" id="board">
+        <div class="cell" data-index="0"><div class="cell-glow"></div></div>
+        <div class="cell" data-index="1"><div class="cell-glow"></div></div>
+        <div class="cell" data-index="2"><div class="cell-glow"></div></div>
+        <div class="cell" data-index="3"><div class="cell-glow"></div></div>
+        <div class="cell" data-index="4"><div class="cell-glow"></div></div>
+        <div class="cell" data-index="5"><div class="cell-glow"></div></div>
+        <div class="cell" data-index="6"><div class="cell-glow"></div></div>
+        <div class="cell" data-index="7"><div class="cell-glow"></div></div>
+        <div class="cell" data-index="8"><div class="cell-glow"></div></div>
+    </div>
+
+    <!-- STATUS -->
+    <div class="status turn" id="status">نوبت بازیکن ۱ (❌)</div>
+
+    <!-- SCORE -->
+    <div class="score">
+        <div class="score-item x-score">❌ <span class="num" id="xScore">0</span></div>
+        <div class="score-item draw-score">🤝 <span class="num" id="drawScore">0</span></div>
+        <div class="score-item o-score">⭕ <span class="num" id="oScore">0</span></div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="actions">
+        <button class="btn btn-primary" id="resetBtn">🔄 <span id="resetLabel">بازی جدید</span></button>
+        <button class="btn btn-secondary" id="clearBtn">🗑️ <span id="clearLabel">صفر کردن امتیاز</span></button>
+    </div>
+</div>
+
+<script>
+    // ============================================================
+    //  GAME LOGIC WITH LOCALSTORAGE
+    // ============================================================
+    const LANG = {
+        fa: {
+            title: 'دوز',
+            turn: 'نوبت:',
+            player1: 'بازیکن ۱',
+            player2: 'بازیکن ۲',
+            you: 'شما',
+            robot: 'ربات',
+            win: '🎉 برنده شد:',
+            draw: '🤝 مساوی!',
+            turnP1: 'نوبت بازیکن ۱ (❌)',
+            turnP2: 'نوبت بازیکن ۲ (⭕)',
+            turnYou: 'نوبت شما (❌)',
+            turnRobot: 'نوبت ربات (⭕)',
+            reset: 'بازی جدید',
+            clear: 'صفر کردن امتیاز',
+            mode2p: '👥 ۲ نفره',
+            modeRobot: '🤖 با ربات',
+            langLabel: '🇬🇧 English'
+        },
+        en: {
+            title: 'Tic-Tac-Toe',
+            turn: 'Turn:',
+            player1: 'Player 1',
+            player2: 'Player 2',
+            you: 'You',
+            robot: 'Robot',
+            win: '🎉 Winner:',
+            draw: '🤝 Draw!',
+            turnP1: "Player 1's turn (❌)",
+            turnP2: "Player 2's turn (⭕)",
+            turnYou: "Your turn (❌)",
+            turnRobot: "Robot's turn (⭕)",
+            reset: 'New Game',
+            clear: 'Reset Scores',
+            mode2p: '👥 2 Players',
+            modeRobot: '🤖 vs Robot',
+            langLabel: '🇮🇷 فارسی'
+        }
+    };
+
+    // ===== STATE =====
+    let lang = 'fa';
+    let gameMode = '2player';
+    let board = ['', '', '', '', '', '', '', '', ''];
+    let currentPlayer = 'X';
+    let gameActive = true;
+    let scores = { X: 0, O: 0, draw: 0 };
+    let isRobotThinking = false;
+    let gameOverFlag = false;
+
+    const STORAGE_KEY = 'tictactoe_data';
+
+    // ===== DOM REFS =====
+    const cells = document.querySelectorAll('.cell');
+    const statusEl = document.getElementById('status');
+    const turnSymbol = document.getElementById('turnSymbol');
+    const turnBadge = document.getElementById('turnBadge');
+    const turnLabel = document.getElementById('turnLabel');
+    const xScoreEl = document.getElementById('xScore');
+    const oScoreEl = document.getElementById('oScore');
+    const drawScoreEl = document.getElementById('drawScore');
+    const resetBtn = document.getElementById('resetBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const langToggle = document.getElementById('langToggle');
+    const mode2p = document.getElementById('mode2p');
+    const modeRobot = document.getElementById('modeRobot');
+    const mainTitle = document.getElementById('mainTitle');
+    const resetLabel = document.getElementById('resetLabel');
+    const clearLabel = document.getElementById('clearLabel');
+
+    const winPatterns = [
+        [0,1,2], [3,4,5], [6,7,8],
+        [0,3,6], [1,4,7], [2,5,8],
+        [0,4,8], [2,4,6]
+    ];
+
+    // ============================================================
+    //  LOCALSTORAGE
+    // ============================================================
+    function saveGame() {
+        const data = {
+            lang,
+            gameMode,
+            board,
+            currentPlayer,
+            gameActive,
+            scores,
+            gameOverFlag,
+            timestamp: Date.now()
+        };
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        } catch (e) {
+            // ignore
+        }
+    }
+
+    function loadGame() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return false;
+            const data = JSON.parse(raw);
+            
+            lang = data.lang || 'fa';
+            gameMode = data.gameMode || '2player';
+            board = data.board || ['', '', '', '', '', '', '', '', ''];
+            currentPlayer = data.currentPlayer || 'X';
+            gameActive = data.gameActive !== undefined ? data.gameActive : true;
+            scores = data.scores || { X: 0, O: 0, draw: 0 };
+            gameOverFlag = data.gameOverFlag || false;
+            
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function clearSavedGame() {
+        localStorage.removeItem(STORAGE_KEY);
+    }
+
+    // ============================================================
+    //  LANGUAGE
+    // ============================================================
+    function t(key) {
+        return LANG[lang][key] || key;
+    }
+
+    function updateLanguage() {
+        mainTitle.textContent = t('title');
+        turnLabel.textContent = t('turn');
+        langToggle.textContent = t('langLabel');
+        resetLabel.textContent = t('reset');
+        clearLabel.textContent = t('clear');
+        mode2p.textContent = t('mode2p');
+        modeRobot.textContent = t('modeRobot');
+        updateUI();
+        saveGame();
+    }
+
+    langToggle.addEventListener('click', () => {
+        lang = lang === 'fa' ? 'en' : 'fa';
+        document.documentElement.lang = lang;
+        document.documentElement.dir = lang === 'fa' ? 'rtl' : 'ltr';
+        updateLanguage();
+    });
+
+    // ============================================================
+    //  MODE
+    // ============================================================
+    [mode2p, modeRobot].forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            gameMode = btn.dataset.mode;
+            resetGame();
+            saveGame();
+        });
+    });
+
+    // ============================================================
+    //  GAME LOGIC
+    // ============================================================
+    cells.forEach(cell => {
+        cell.addEventListener('click', () => {
+            const index = parseInt(cell.dataset.index);
+            handleCellClick(index);
+        });
+    });
+
+    function handleCellClick(index) {
+        if (!gameActive || gameOverFlag) return;
+        if (board[index] !== '') return;
+        if (gameMode === 'robot' && currentPlayer === 'O' && !isRobotThinking) return;
+        if (isRobotThinking) return;
+
+        makeMove(index);
+        saveGame();
+
+        if (gameMode === 'robot' && gameActive && !gameOverFlag && currentPlayer === 'O') {
+            isRobotThinking = true;
+            setTimeout(() => {
+                robotMove();
+                isRobotThinking = false;
+                saveGame();
+            }, 450);
+        }
+    }
+
+    function makeMove(index) {
+        board[index] = currentPlayer;
+        const cell = cells[index];
+        cell.textContent = currentPlayer === 'X' ? '❌' : '⭕';
+        cell.classList.add('taken', currentPlayer.toLowerCase());
+
+        if (checkWin(currentPlayer)) {
+            endGame(currentPlayer);
+            return;
+        }
+
+        if (board.every(cell => cell !== '')) {
+            endGame('draw');
+            return;
+        }
+
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        updateUI();
+    }
+
+    function checkWin(player) {
+        let won = false;
+        winPatterns.forEach(pattern => {
+            if (pattern.every(idx => board[idx] === player)) {
+                pattern.forEach(idx => cells[idx].classList.add('winner'));
+                won = true;
+            }
+        });
+        return won;
+    }
+
+    function endGame(winner) {
+        gameActive = false;
+        gameOverFlag = true;
+        if (winner === 'draw') {
+            scores.draw++;
+            statusEl.className = 'status draw';
+            statusEl.textContent = t('draw');
+        } else {
+            scores[winner]++;
+            const name = winner === 'X' ? t('player1') : (gameMode === 'robot' ? t('robot') : t('player2'));
+            statusEl.className = 'status win';
+            statusEl.textContent = `${t('win')} ${name}`;
+        }
+        updateScore();
+        updateUI();
+        cells.forEach(c => c.classList.add('game-over'));
+        saveGame();
+    }
+
+    function updateUI() {
+        const player = currentPlayer;
+        const symbol = player === 'X' ? '❌' : '⭕';
+        turnSymbol.textContent = symbol;
+
+        let label = '';
+        let badgeClass = player === 'X' ? 'x-badge' : 'o-badge';
+
+        if (gameOverFlag) {
+            turnBadge.textContent = statusEl.textContent.includes('Draw') || statusEl.textContent.includes('مساوی') ? '🤝' : '🏆';
+            turnBadge.className = 'badge';
+            return;
+        }
+
+        if (gameMode === '2player') {
+            const name = player === 'X' ? t('player1') : t('player2');
+            label = `${name} (${symbol})`;
+            turnBadge.textContent = label;
+            turnBadge.className = `badge ${badgeClass}`;
+            statusEl.className = 'status turn';
+            statusEl.textContent = player === 'X' ? t('turnP1') : t('turnP2');
+        } else {
+            if (player === 'X') {
+                label = `${t('you')} (❌)`;
+                turnBadge.textContent = label;
+                turnBadge.className = 'badge x-badge';
+                statusEl.className = 'status turn';
+                statusEl.textContent = t('turnYou');
+            } else {
+                label = `${t('robot')} (⭕)`;
+                turnBadge.textContent = label;
+                turnBadge.className = 'badge o-badge';
+                statusEl.className = 'status turn';
+                statusEl.textContent = t('turnRobot');
+            }
+        }
+    }
+
+    function updateScore() {
+        xScoreEl.textContent = scores.X;
+        oScoreEl.textContent = scores.O;
+        drawScoreEl.textContent = scores.draw;
+    }
+
+    // ============================================================
+    //  ROBOT
+    // ============================================================
+    function robotMove() {
+        if (!gameActive || gameOverFlag) return;
+        if (currentPlayer !== 'O') return;
+        if (board.every(cell => cell !== '')) return;
+
+        const empty = board.map((v, i) => v === '' ? i : null).filter(v => v !== null);
+        if (empty.length === 0) return;
+
+        // 1 - Win
+        for (let idx of empty) {
+            board[idx] = 'O';
+            if (checkWin('O')) {
+                board[idx] = '';
+                makeMove(idx);
+                return;
+            }
+            board[idx] = '';
+        }
+
+        // 2 - Block
+        for (let idx of empty) {
+            board[idx] = 'X';
+            if (checkWin('X')) {
+                board[idx] = '';
+                makeMove(idx);
+                return;
+            }
+            board[idx] = '';
+        }
+
+        // 3 - Center
+        if (board[4] === '') { makeMove(4); return; }
+
+        // 4 - Corners
+        const corners = [0,2,6,8].filter(i => board[i] === '');
+        if (corners.length > 0) {
+            makeMove(corners[Math.floor(Math.random() * corners.length)]);
+            return;
+        }
+
+        // 5 - Any
+        makeMove(empty[Math.floor(Math.random() * empty.length)]);
+    }
+
+    // ============================================================
+    //  RESET
+    // ============================================================
+    function resetGame() {
+        board = ['', '', '', '', '', '', '', '', ''];
+        currentPlayer = 'X';
+        gameActive = true;
+        gameOverFlag = false;
+        isRobotThinking = false;
+
+        cells.forEach(cell => {
+            cell.textContent = '';
+            cell.className = 'cell';
+            const glow = cell.querySelector('.cell-glow');
+            if (glow) cell.appendChild(glow);
+        });
+
+        statusEl.className = 'status turn';
+        updateUI();
+        updateScore();
+        saveGame();
+    }
+
+    resetBtn.addEventListener('click', resetGame);
+
+    clearBtn.addEventListener('click', () => {
+        scores = { X: 0, O: 0, draw: 0 };
+        updateScore();
+        clearSavedGame();
+        resetGame();
+    });
+
+    // ============================================================
+    //  RESTORE BOARD FROM SAVE
+    // ============================================================
+    function restoreBoard() {
+        cells.forEach((cell, idx) => {
+            const val = board[idx];
+            if (val === 'X') {
+                cell.textContent = '❌';
+                cell.classList.add('taken', 'x');
+            } else if (val === 'O') {
+                cell.textContent = '⭕';
+                cell.classList.add('taken', 'o');
+            } else {
+                cell.textContent = '';
+                cell.className = 'cell';
+            }
+            // re-add glow
+            if (!cell.querySelector('.cell-glow')) {
+                const glow = document.createElement('div');
+                glow.className = 'cell-glow';
+                cell.appendChild(glow);
+            }
+        });
+
+        // Check for winner
+        if (gameOverFlag) {
+            cells.forEach(c => c.classList.add('game-over'));
+            // Find winner cells
+            ['X', 'O'].forEach(player => {
+                winPatterns.forEach(pattern => {
+                    if (pattern.every(idx => board[idx] === player)) {
+                        pattern.forEach(idx => cells[idx].classList.add('winner'));
+                    }
+                });
+            });
+            if (statusEl.textContent.includes('Draw') || statusEl.textContent.includes('مساوی')) {
+                statusEl.className = 'status draw';
+            } else {
+                statusEl.className = 'status win';
+            }
+        } else {
+            statusEl.className = 'status turn';
+        }
+        updateUI();
+        updateScore();
+    }
+
+    // ============================================================
+    //  INIT
+    // ============================================================
+    function init() {
+        const loaded = loadGame();
+        
+        // Set mode buttons
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.mode === gameMode);
+        });
+
+        // Set language
+        document.documentElement.lang = lang;
+        document.documentElement.dir = lang === 'fa' ? 'rtl' : 'ltr';
+
+        if (loaded) {
+            restoreBoard();
+        } else {
+            resetGame();
+        }
+        
+        updateLanguage();
+    }
+
+    init();
+</script>
+</body>
+  </html>
