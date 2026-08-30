@@ -82,7 +82,6 @@ jobs:
           from PIL import Image, ImageDraw
 
           def create_icon(size, filename):
-              # پس‌زمینه تیره
               img = Image.new("RGBA", (size, size), (20, 20, 45, 255))
               draw = ImageDraw.Draw(img)
 
@@ -91,14 +90,12 @@ jobs:
               line_width = max(8, int(size * 0.035))
               symbol_width = max(10, int(size * 0.045))
 
-              # خطوط شبکه
               for i in range(1, 3):
                   x = margin + i * cell
                   y = margin + i * cell
                   draw.line([(x, margin), (x, size - margin)], fill=(102, 126, 234, 255), width=line_width)
                   draw.line([(margin, y), (size - margin, y)], fill=(102, 126, 234, 255), width=line_width)
 
-              # X
               offset = int(size * 0.045)
               x1 = margin + offset
               y1 = margin + offset
@@ -107,7 +104,6 @@ jobs:
               draw.line([(x1, y1), (x2, y2)], fill=(231, 76, 60, 255), width=symbol_width)
               draw.line([(x2, y1), (x1, y2)], fill=(231, 76, 60, 255), width=symbol_width)
 
-              # O
               cx = margin + cell + cell // 2
               cy = margin + cell + cell // 2
               radius = cell // 3
@@ -126,7 +122,6 @@ jobs:
 
       - name: Setup Android icon resources
         run: |
-          # ایجاد پوشه‌های مورد نیاز
           mkdir -p android/app/src/main/res/drawable
           mkdir -p android/app/src/main/res/mipmap-hdpi
           mkdir -p android/app/src/main/res/mipmap-mdpi
@@ -135,7 +130,6 @@ jobs:
           mkdir -p android/app/src/main/res/mipmap-xxxhdpi
           mkdir -p android/app/src/main/res/drawable-v24
 
-          # ایجاد آیکون‌های با اندازه‌های مختلف
           python3 - <<'PY'
           from PIL import Image
 
@@ -156,65 +150,74 @@ jobs:
               resized.save(f"{path}/ic_launcher_round.png")
           PY
 
-      - name: Fix AndroidManifest and build.gradle
+      - name: Create adaptive icon drawables
         run: |
-          # اصلاح AndroidManifest.xml
-          cat > android/app/src/main/AndroidManifest.xml <<'EOF'
+          cat > android/app/src/main/res/drawable/ic_launcher_background.xml <<'EOF'
           <?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-              package="com.tictactoe.game">
-              <application
-                  android:allowBackup="true"
-                  android:icon="@mipmap/ic_launcher"
-                  android:label="@string/app_name"
-                  android:roundIcon="@mipmap/ic_launcher_round"
-                  android:supportsRtl="true"
-                  android:theme="@style/AppTheme">
-                  <activity
-                      android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
-                      android:name="com.tictactoe.game.MainActivity"
-                      android:label="@string/title_activity_main"
-                      android:theme="@style/AppTheme.NoActionBarLaunch"
-                      android:exported="true">
-                      <intent-filter>
-                          <action android:name="android.intent.action.MAIN" />
-                          <category android:name="android.intent.category.LAUNCHER" />
-                      </intent-filter>
-                  </activity>
-                  <provider
-                      android:name="androidx.core.content.FileProvider"
-                      android:authorities="${applicationId}.fileprovider"
-                      android:exported="false"
-                      android:grantUriPermissions="true">
-                      <meta-data
-                          android:name="android.support.FILE_PROVIDER_PATHS"
-                          android:resource="@xml/file_paths" />
-                  </provider>
-              </application>
-          </manifest>
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="108dp"
+              android:height="108dp"
+              android:viewportWidth="108"
+              android:viewportHeight="108">
+            <path
+                android:fillColor="#14142D"
+                android:pathData="M0,0h108v108h-108z"/>
+          </vector>
           EOF
 
-      - name: Create debug keystore and sign APK
-        run: |
-          # ایجاد کلید امضا برای APK
-          keytool -genkey -v -keystore debug.keystore -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
-            -storepass android -keypass android \
-            -dname "CN=Android Debug, O=Android, C=US"
+          cat > android/app/src/main/res/drawable-v24/ic_launcher_foreground.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="108dp"
+              android:height="108dp"
+              android:viewportWidth="108"
+              android:viewportHeight="108">
+            <path
+                android:fillColor="#667EEA"
+                android:pathData="M20,15 L88,15 L88,25 L20,25 Z"/>
+            <path
+                android:fillColor="#667EEA"
+                android:pathData="M20,40 L88,40 L88,50 L20,50 Z"/>
+            <path
+                android:fillColor="#667EEA"
+                android:pathData="M20,65 L88,65 L88,75 L20,75 Z"/>
+            <path
+                android:fillColor="#E74C3C"
+                android:pathData="M25,20 L35,30 L25,40 M35,20 L25,30 L35,40"/>
+            <path
+                android:fillColor="#3498DB"
+                android:strokeColor="#3498DB"
+                android:strokeWidth="4"
+                android:pathData="M55,28 A16,16 0 1,1 55,59 A16,16 0 1,1 55,28"/>
+          </vector>
+          EOF
 
-          # تنظیم برای استفاده از کلید دیباگ
-          cat > android/app/build.gradle <<'EOF'
+      - name: Fix Android build files with auto-increment version
+        run: |
+          # دریافت تاریخ و زمان برای versionCode خودکار
+          VERSION_CODE=$(date +%Y%m%d%H%M)
+          VERSION_NAME="1.0.$(date +%Y%m%d)"
+
+          echo "Version Code: $VERSION_CODE"
+          echo "Version Name: $VERSION_NAME"
+
+          # اصلاح build.gradle و اضافه کردن namespace
+          cat > android/app/build.gradle <<EOF
           apply plugin: 'com.android.application'
 
           android {
-              compileSdkVersion 34
+              namespace "com.tictactoe.game"
+              compileSdk 34
+
               defaultConfig {
                   applicationId "com.tictactoe.game"
-                  minSdkVersion 23
-                  targetSdkVersion 34
-                  versionCode 1
-                  versionName "1.0"
+                  minSdk 23
+                  targetSdk 34
+                  versionCode $VERSION_CODE
+                  versionName "$VERSION_NAME"
                   testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
               }
+
               buildTypes {
                   release {
                       minifyEnabled false
@@ -244,7 +247,60 @@ jobs:
           apply from: 'capacitor.build.gradle'
           EOF
 
-          # کپی کلید به پوشه android
+      - name: Fix AndroidManifest.xml
+        run: |
+          cat > android/app/src/main/AndroidManifest.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:tools="http://schemas.android.com/tools">
+              <application
+                  android:allowBackup="true"
+                  android:icon="@mipmap/ic_launcher"
+                  android:label="@string/app_name"
+                  android:roundIcon="@mipmap/ic_launcher_round"
+                  android:supportsRtl="true"
+                  android:theme="@style/AppTheme"
+                  android:usesCleartextTraffic="true"
+                  tools:targetApi="31">
+                  <activity
+                      android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+                      android:name="com.tictactoe.game.MainActivity"
+                      android:label="@string/title_activity_main"
+                      android:theme="@style/AppTheme.NoActionBarLaunch"
+                      android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+                  <provider
+                      android:name="androidx.core.content.FileProvider"
+                      android:authorities="\${applicationId}.fileprovider"
+                      android:exported="false"
+                      android:grantUriPermissions="true">
+                      <meta-data
+                          android:name="android.support.FILE_PROVIDER_PATHS"
+                          android:resource="@xml/file_paths" />
+                  </provider>
+              </application>
+          </manifest>
+          EOF
+
+      - name: Fix strings.xml
+        run: |
+          cat > android/app/src/main/res/values/strings.xml <<'EOF'
+          <?xml version='1.0' encoding='utf-8'?>
+          <resources>
+              <string name="app_name">Tic Tac Toe</string>
+              <string name="title_activity_main">Tic Tac Toe</string>
+          </resources>
+          EOF
+
+      - name: Create debug keystore
+        run: |
+          keytool -genkey -v -keystore debug.keystore -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass android -keypass android \
+            -dname "CN=Android Debug, O=Android, C=US"
           cp debug.keystore android/
 
       - name: Sync web app to Android
@@ -255,21 +311,20 @@ jobs:
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew assembleRelease --no-daemon
+          ./gradlew assembleRelease --no-daemon --stacktrace
 
       - name: Verify and rename APK
         run: |
           mkdir -p output
           
-          # پیدا کردن APK
           APK_PATH=$(find android -name "*.apk" -type f | grep -v "unaligned" | head -n 1)
           
           if [ -f "$APK_PATH" ]; then
             echo "✅ Found APK at: $APK_PATH"
             cp "$APK_PATH" output/Tic-Tac-Toe.apk
             echo "✅ APK saved successfully"
-            file output/Tic-Tac-Toe.apk
-            ls -lh output/
+            echo "APK Size:"
+            ls -lh output/Tic-Tac-Toe.apk
           else
             echo "❌ No APK found!"
             find android -name "*.apk" -type f
