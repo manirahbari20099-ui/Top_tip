@@ -184,15 +184,41 @@ jobs:
         run: |
           chmod +x android/gradlew
 
-      - name: Build Release APK
+      - name: Build Release APK with debug info
         working-directory: android
         run: |
-          ./gradlew assembleRelease --no-daemon --stacktrace
+          # نمایش ساختار پوشه برای دیباگ
+          echo "=== Directory structure ==="
+          ls -la
+          echo "=== Gradle files ==="
+          ls -la gradle/
+          echo "=== Build started ==="
+          
+          # Build با نمایش کامل خطاها
+          ./gradlew assembleRelease --no-daemon --stacktrace --info
+          
+          # بررسی وجود فایل APK
+          echo "=== Checking for APK ==="
+          find . -name "*.apk" -type f
+          ls -la app/build/outputs/apk/ || echo "APK directory not found"
 
       - name: Rename APK
         run: |
           mkdir -p output
-          cp android/app/build/outputs/apk/release/app-release.apk output/Tic-Tac-Toe.apk
+          
+          # پیدا کردن فایل APK در هر مسیری
+          APK_FILE=$(find android -name "*.apk" -type f | head -n 1)
+          
+          if [ -f "$APK_FILE" ]; then
+            echo "Found APK at: $APK_FILE"
+            cp "$APK_FILE" output/Tic-Tac-Toe.apk
+            echo "APK copied successfully"
+          else
+            echo "ERROR: No APK file found!"
+            echo "Searching in android directory..."
+            find android -name "*.apk" -type f || echo "No APK found"
+            exit 1
+          fi
 
       - name: Upload APK
         uses: actions/upload-artifact@v5
