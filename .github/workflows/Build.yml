@@ -16,16 +16,16 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
 
       - name: Setup Node.js 24
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@v4
         with:
           node-version: "24"
           package-manager-cache: false
 
       - name: Setup Java 21
-        uses: actions/setup-java@v6
+        uses: actions/setup-java@v5
         with:
           distribution: "temurin"
           java-version: "21"
@@ -93,22 +93,48 @@ jobs:
               for i in range(1, 3):
                   x = margin + i * cell
                   y = margin + i * cell
-                  draw.line([(x, margin), (x, size - margin)], fill=(102, 126, 234, 255), width=line_width)
-                  draw.line([(margin, y), (size - margin, y)], fill=(102, 126, 234, 255), width=line_width)
+                  draw.line(
+                      [(x, margin), (x, size - margin)],
+                      fill=(102, 126, 234, 255),
+                      width=line_width
+                  )
+                  draw.line(
+                      [(margin, y), (size - margin, y)],
+                      fill=(102, 126, 234, 255),
+                      width=line_width
+                  )
 
               offset = int(size * 0.045)
               x1 = margin + offset
               y1 = margin + offset
               x2 = margin + cell - offset
               y2 = margin + cell - offset
-              draw.line([(x1, y1), (x2, y2)], fill=(231, 76, 60, 255), width=symbol_width)
-              draw.line([(x2, y1), (x1, y2)], fill=(231, 76, 60, 255), width=symbol_width)
+
+              draw.line(
+                  [(x1, y1), (x2, y2)],
+                  fill=(231, 76, 60, 255),
+                  width=symbol_width
+              )
+              draw.line(
+                  [(x2, y1), (x1, y2)],
+                  fill=(231, 76, 60, 255),
+                  width=symbol_width
+              )
 
               cx = margin + cell + cell // 2
               cy = margin + cell + cell // 2
               radius = cell // 3
-              draw.ellipse([cx - radius, cy - radius, cx + radius, cy + radius], 
-                          outline=(52, 152, 219, 255), width=symbol_width)
+
+              draw.ellipse(
+                  [
+                      cx - radius,
+                      cy - radius,
+                      cx + radius,
+                      cy + radius
+                  ],
+                  outline=(52, 152, 219, 255),
+                  width=symbol_width
+              )
 
               img.save(filename)
 
@@ -144,8 +170,13 @@ jobs:
           }
 
           for folder, size in icon_sizes.items():
-              resized = source.resize((size, size), Image.Resampling.LANCZOS)
+              resized = source.resize(
+                  (size, size),
+                  Image.Resampling.LANCZOS
+              )
+
               path = f"android/app/src/main/res/{folder}"
+
               resized.save(f"{path}/ic_launcher.png")
               resized.save(f"{path}/ic_launcher_round.png")
           PY
@@ -159,9 +190,11 @@ jobs:
               android:height="108dp"
               android:viewportWidth="108"
               android:viewportHeight="108">
-            <path
-                android:fillColor="#14142D"
-                android:pathData="M0,0h108v108h-108z"/>
+
+              <path
+                  android:fillColor="#14142D"
+                  android:pathData="M0,0h108v108h-108z"/>
+
           </vector>
           EOF
 
@@ -172,36 +205,40 @@ jobs:
               android:height="108dp"
               android:viewportWidth="108"
               android:viewportHeight="108">
-            <path
-                android:fillColor="#667EEA"
-                android:pathData="M20,15 L88,15 L88,25 L20,25 Z"/>
-            <path
-                android:fillColor="#667EEA"
-                android:pathData="M20,40 L88,40 L88,50 L20,50 Z"/>
-            <path
-                android:fillColor="#667EEA"
-                android:pathData="M20,65 L88,65 L88,75 L20,75 Z"/>
-            <path
-                android:fillColor="#E74C3C"
-                android:pathData="M25,20 L35,30 L25,40 M35,20 L25,30 L35,40"/>
-            <path
-                android:fillColor="#3498DB"
-                android:strokeColor="#3498DB"
-                android:strokeWidth="4"
-                android:pathData="M55,28 A16,16 0 1,1 55,59 A16,16 0 1,1 55,28"/>
+
+              <path
+                  android:fillColor="#667EEA"
+                  android:pathData="M20,15 L88,15 L88,25 L20,25 Z"/>
+
+              <path
+                  android:fillColor="#667EEA"
+                  android:pathData="M20,40 L88,40 L88,50 L20,50 Z"/>
+
+              <path
+                  android:fillColor="#667EEA"
+                  android:pathData="M20,65 L88,65 L88,75 L20,75 Z"/>
+
+              <path
+                  android:fillColor="#E74C3C"
+                  android:pathData="M25,20 L35,30 L25,40 M35,20 L25,30 L35,40"/>
+
+              <path
+                  android:fillColor="#3498DB"
+                  android:strokeColor="#3498DB"
+                  android:strokeWidth="4"
+                  android:pathData="M55,28 A16,16 0 1,1 55,59 A16,16 0 1,1 55,28"/>
+
           </vector>
           EOF
 
       - name: Fix build.gradle with correct syntax
         run: |
-          # دریافت تاریخ و زمان برای versionCode خودکار
           VERSION_CODE=$(date +%Y%m%d%H%M)
           VERSION_NAME="1.0.$(date +%Y%m%d)"
 
           echo "Version Code: $VERSION_CODE"
           echo "Version Name: $VERSION_NAME"
 
-          # اصلاح build.gradle با سینتکس صحیح
           cat > android/app/build.gradle <<EOF
           apply plugin: 'com.android.application'
 
@@ -225,6 +262,7 @@ jobs:
                       signingConfig signingConfigs.debug
                   }
               }
+
               compileOptions {
                   sourceCompatibility JavaVersion.VERSION_17
                   targetCompatibility JavaVersion.VERSION_17
@@ -251,9 +289,11 @@ jobs:
         run: |
           cat > android/app/src/main/AndroidManifest.xml <<'EOF'
           <?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          <manifest
+              xmlns:android="http://schemas.android.com/apk/res/android"
               xmlns:tools="http://schemas.android.com/tools"
               package="com.tictactoe.game">
+
               <application
                   android:allowBackup="true"
                   android:icon="@mipmap/ic_launcher"
@@ -263,35 +303,45 @@ jobs:
                   android:theme="@style/AppTheme"
                   android:usesCleartextTraffic="true"
                   tools:targetApi="31">
+
                   <activity
-                      android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
                       android:name="com.tictactoe.game.MainActivity"
                       android:label="@string/title_activity_main"
                       android:theme="@style/AppTheme.NoActionBarLaunch"
-                      android:exported="true">
+                      android:exported="true"
+                      android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode">
+
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN" />
                           <category android:name="android.intent.category.LAUNCHER" />
                       </intent-filter>
+
                   </activity>
+
                   <provider
                       android:name="androidx.core.content.FileProvider"
-                      android:authorities="\${applicationId}.fileprovider"
+                      android:authorities="${applicationId}.fileprovider"
                       android:exported="false"
                       android:grantUriPermissions="true">
+
                       <meta-data
                           android:name="android.support.FILE_PROVIDER_PATHS"
                           android:resource="@xml/file_paths" />
+
                   </provider>
+
               </application>
+
           </manifest>
           EOF
 
       - name: Fix strings.xml
         run: |
           mkdir -p android/app/src/main/res/values
+
           cat > android/app/src/main/res/values/strings.xml <<'EOF'
-          <?xml version='1.0' encoding='utf-8'?>
+          <?xml version="1.0" encoding="utf-8"?>
+
           <resources>
               <string name="app_name">Tic Tac Toe</string>
               <string name="title_activity_main">Tic Tac Toe</string>
@@ -300,9 +350,18 @@ jobs:
 
       - name: Create debug keystore
         run: |
-          keytool -genkey -v -keystore debug.keystore -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
-            -storepass android -keypass android \
+          keytool \
+            -genkey \
+            -v \
+            -keystore debug.keystore \
+            -alias androiddebugkey \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass android \
+            -keypass android \
             -dname "CN=Android Debug, O=Android, C=US"
+
           cp debug.keystore android/
 
       - name: Sync web app to Android
@@ -313,28 +372,33 @@ jobs:
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew assembleRelease --no-daemon --stacktrace
+          ./gradlew assembleRelease --no-daemon --stacktrace --warning-mode all
 
       - name: Verify and rename APK
         run: |
           mkdir -p output
-          
+
           APK_PATH=$(find android -name "*.apk" -type f | grep -v "unaligned" | head -n 1)
-          
+
           if [ -f "$APK_PATH" ]; then
-            echo "✅ Found APK at: $APK_PATH"
+            echo "Found APK at: $APK_PATH"
+
             cp "$APK_PATH" output/Tic-Tac-Toe.apk
-            echo "✅ APK saved successfully"
+
+            echo "APK saved successfully"
             echo "APK Size:"
+
             ls -lh output/Tic-Tac-Toe.apk
           else
-            echo "❌ No APK found!"
+            echo "No APK found!"
+
             find android -name "*.apk" -type f
+
             exit 1
           fi
 
       - name: Upload APK
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
           name: Tic-Tac-Toe-Android-APK
           path: output/Tic-Tac-Toe.apk
