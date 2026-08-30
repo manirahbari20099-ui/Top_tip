@@ -1,0 +1,314 @@
+name: Build Doz Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      # ==============================
+      # 1. Download project
+      # ==============================
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # ==============================
+      # 2. Node.js 24
+      # ==============================
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      # ==============================
+      # 3. Java 21
+      # ==============================
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      # ==============================
+      # 4. Android SDK
+      # ==============================
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      # ==============================
+      # 5. Create Node project
+      # ==============================
+      - name: Create package.json
+        run: |
+          npm init -y
+
+      # ==============================
+      # 6. Install Capacitor
+      # ==============================
+      - name: Install Capacitor
+        run: |
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+
+      # ==============================
+      # 7. Prepare HTML
+      # ==============================
+      - name: Prepare Web App
+        run: |
+          rm -rf www
+          mkdir -p www
+
+          if [ ! -f index.html ]; then
+            echo "ERROR: index.html was not found."
+            exit 1
+          fi
+
+          cp index.html www/index.html
+
+      # ==============================
+      # 8. Create Capacitor config
+      # ==============================
+      - name: Create Capacitor Config
+        run: |
+          cat > capacitor.config.json <<'EOF'
+          {
+            "appId": "com.doz.game",
+            "appName": "دوز",
+            "webDir": "www",
+            "bundledWebRuntime": false
+          }
+          EOF
+
+      # ==============================
+      # 9. Add Android
+      # ==============================
+      - name: Add Android Platform
+        run: |
+          npx cap add android
+
+      # ==============================
+      # 10. Sync Web App
+      # ==============================
+      - name: Sync Capacitor
+        run: |
+          npx cap sync android
+
+      # ==============================
+      # 11. Install Pillow
+      # ==============================
+      - name: Install Pillow
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install pillow
+
+      # ==============================
+      # 12. Generate Game Icon
+      # ==============================
+      - name: Generate Doz Icon
+        run: |
+          python3 <<'PY'
+          from PIL import Image, ImageDraw, ImageFilter
+          import os
+          import math
+
+          sizes = [48, 72, 96, 144, 192, 512]
+
+          for size in sizes:
+              img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+              draw = ImageDraw.Draw(img)
+
+              # Background
+              draw.rounded_rectangle(
+                  [0, 0, size - 1, size - 1],
+                  radius=int(size * 0.22),
+                  fill=(102, 126, 234, 255)
+              )
+
+              # Inner gradient-like layers
+              draw.rounded_rectangle(
+                  [
+                      int(size * 0.05),
+                      int(size * 0.05),
+                      int(size * 0.95),
+                      int(size * 0.95)
+                  ],
+                  radius=int(size * 0.19),
+                  fill=(118, 75, 162, 255)
+              )
+
+              # Soft glow layer
+              glow = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+              gd = ImageDraw.Draw(glow)
+
+              r = int(size * 0.27)
+              cx = size // 2
+              cy = size // 2
+
+              gd.ellipse(
+                  [cx-r, cy-r, cx+r, cy+r],
+                  fill=(255, 255, 255, 45)
+              )
+
+              glow = glow.filter(
+                  ImageFilter.GaussianBlur(max(2, int(size * 0.08)))
+              )
+
+              img = Image.alpha_composite(img, glow)
+              draw = ImageDraw.Draw(img)
+
+              # Center circle
+              margin = int(size * 0.16)
+
+              draw.ellipse(
+                  [margin, margin, size-margin, size-margin],
+                  fill=(15, 15, 30, 235),
+                  outline=(255, 255, 255, 80),
+                  width=max(1, int(size * 0.015))
+              )
+
+              # X
+              x1 = int(size * 0.31)
+              y1 = int(size * 0.31)
+              x2 = int(size * 0.45)
+              y2 = int(size * 0.45)
+
+              width = max(2, int(size * 0.075))
+
+              draw.line(
+                  [x1, y1, x2, y2],
+                  fill=(231, 76, 60, 255),
+                  width=width
+              )
+
+              draw.line(
+                  [x1, y2, x2, y1],
+                  fill=(231, 76, 60, 255),
+                  width=width
+              )
+
+              # O
+              bbox = [
+                  int(size * 0.52),
+                  int(size * 0.52),
+                  int(size * 0.76),
+                  int(size * 0.76)
+              ]
+
+              draw.ellipse(
+                  bbox,
+                  outline=(52, 152, 219, 255),
+                  width=width
+              )
+
+              # Small highlight
+              highlight = max(1, int(size * 0.025))
+
+              draw.ellipse(
+                  [
+                      int(size * 0.20),
+                      int(size * 0.14),
+                      int(size * 0.20) + highlight * 3,
+                      int(size * 0.14) + highlight * 3
+                  ],
+                  fill=(255, 255, 255, 180)
+              )
+
+              # Save
+              img = img.resize((size, size), Image.Resampling.LANCZOS)
+
+              if size == 48:
+                  folder = "android/app/src/main/res/mipmap-mdpi"
+              elif size == 72:
+                  folder = "android/app/src/main/res/mipmap-hdpi"
+              elif size == 96:
+                  folder = "android/app/src/main/res/mipmap-xhdpi"
+              elif size == 144:
+                  folder = "android/app/src/main/res/mipmap-xxhdpi"
+              elif size == 192:
+                  folder = "android/app/src/main/res/mipmap-xxxhdpi"
+              else:
+                  folder = "android/app/src/main/res/mipmap-xxxhdpi"
+
+              os.makedirs(folder, exist_ok=True)
+
+              img.save(
+                  os.path.join(folder, "ic_launcher.png"),
+                  "PNG"
+              )
+
+              img.save(
+                  os.path.join(folder, "ic_launcher_round.png"),
+                  "PNG"
+              )
+
+          print("Doz icon generated successfully.")
+          PY
+
+      # ==============================
+      # 13. Set generated icon
+      # ==============================
+      - name: Configure Android Icon
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          manifest = Path("android/app/src/main/AndroidManifest.xml")
+
+          if manifest.exists():
+              text = manifest.read_text()
+
+              text = text.replace(
+                  'android:icon="@mipmap/ic_launcher"',
+                  'android:icon="@mipmap/ic_launcher"'
+              )
+
+              text = text.replace(
+                  'android:roundIcon="@mipmap/ic_launcher_round"',
+                  'android:roundIcon="@mipmap/ic_launcher_round"'
+              )
+
+              manifest.write_text(text)
+
+          print("Android icon configuration completed.")
+          PY
+
+      # ==============================
+      # 14. Build APK
+      # ==============================
+      - name: Build Debug APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleDebug
+
+      # ==============================
+      # 15. Copy APK
+      # ==============================
+      - name: Prepare APK
+        run: |
+          mkdir -p output
+
+          cp \
+            android/app/build/outputs/apk/debug/app-debug.apk \
+            output/Doz-Android.apk
+
+          ls -lh output/Doz-Android.apk
+
+      # ==============================
+      # 16. Upload APK
+      # ==============================
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Doz-Android-APK
+          path: output/Doz-Android.apk
+          if-no-files-found: error
