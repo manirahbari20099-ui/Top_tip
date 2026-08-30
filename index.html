@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎮 Tic-Tac-Toe / دوز</title>
+    <title>🎮 Tic-Tac-Toe / دوز </title>
     <style>
-        /* ===== RESET & BASE ===== */
         * {
             margin: 0;
             padding: 0;
@@ -20,10 +19,8 @@
             font-family: 'Segoe UI', 'Vazir', Tahoma, sans-serif;
             background: radial-gradient(ellipse at center, #1a1a2e, #0f0f1a);
             padding: 20px;
-            transition: background 0.5s;
         }
 
-        /* ===== CONTAINER ===== */
         .game-container {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(20px);
@@ -31,13 +28,11 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 40px;
             padding: 35px;
-            max-width: 550px;
+            max-width: 600px;
             width: 100%;
             box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            transition: all 0.3s;
         }
 
-        /* ===== HEADER ===== */
         .header {
             display: flex;
             justify-content: space-between;
@@ -55,7 +50,6 @@
             color: #fff;
             font-size: 26px;
             font-weight: 800;
-            letter-spacing: 1px;
             text-shadow: 0 2px 20px rgba(100, 100, 255, 0.3);
         }
 
@@ -87,7 +81,6 @@
             transform: scale(1.05);
         }
 
-        /* ===== MODE SELECTOR ===== */
         .mode-selector {
             display: flex;
             gap: 8px;
@@ -124,7 +117,6 @@
             background: rgba(255, 255, 255, 0.05);
         }
 
-        /* ===== TURN INDICATOR ===== */
         .turn-indicator {
             display: flex;
             justify-content: space-between;
@@ -160,7 +152,6 @@
         .badge.x-badge { background: rgba(231, 76, 60, 0.3); color: #e74c3c; }
         .badge.o-badge { background: rgba(52, 152, 219, 0.3); color: #3498db; }
 
-        /* ===== BOARD ===== */
         .board {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -194,13 +185,8 @@
             border-color: rgba(255, 255, 255, 0.15);
         }
 
-        .cell.taken {
+        .cell.taken, .cell.game-over {
             cursor: not-allowed;
-        }
-
-        .cell.game-over {
-            cursor: not-allowed;
-            opacity: 0.6;
         }
 
         .cell.x {
@@ -230,21 +216,6 @@
             100% { transform: scale(1.05); }
         }
 
-        .cell .cell-glow {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 18px;
-            pointer-events: none;
-            opacity: 0;
-            transition: 0.3s;
-        }
-
-        .cell.x .cell-glow { background: radial-gradient(circle, rgba(231,76,60,0.15), transparent); }
-        .cell.o .cell-glow { background: radial-gradient(circle, rgba(52,152,219,0.15), transparent); }
-        .cell:not(.taken) .cell-glow { opacity: 0; }
-
-        /* ===== STATUS ===== */
         .status {
             padding: 14px 18px;
             border-radius: 16px;
@@ -278,12 +249,33 @@
             color: rgba(255, 255, 255, 0.8);
         }
 
-        /* ===== SCORE ===== */
+        .score-section {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 12px;
+            margin: 12px 0;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: none;
+        }
+
+        .score-section.active {
+            display: block;
+        }
+
+        .score-title {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 13px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+
         .score {
             display: flex;
             justify-content: center;
             gap: 15px;
-            margin: 12px 0;
+            flex-wrap: wrap;
         }
 
         .score-item {
@@ -308,8 +300,8 @@
         .score-item.x-score .num { color: #e74c3c; }
         .score-item.o-score .num { color: #3498db; }
         .score-item.draw-score .num { color: #f1c40f; }
+        .score-item.points .num { color: #2ecc71; }
 
-        /* ===== BUTTONS ===== */
         .actions {
             display: flex;
             gap: 10px;
@@ -343,22 +335,15 @@
             box-shadow: 0 8px 35px rgba(102, 126, 234, 0.4);
         }
 
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.08);
-            color: #fff;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.15);
-            transform: translateY(-2px);
-        }
-
         .btn:active {
             transform: scale(0.95) !important;
         }
 
-        /* ===== RESPONSIVE ===== */
+        .robot-thinking {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
         @media (max-width: 500px) {
             .game-container { padding: 20px; }
             .title h1 { font-size: 20px; }
@@ -368,6 +353,7 @@
             .turn-player { font-size: 16px; }
             .mode-btn { font-size: 12px; padding: 8px 10px; }
             .btn { font-size: 13px; padding: 12px 14px; }
+            .score { gap: 8px; }
         }
 
         @media (max-width: 380px) {
@@ -377,7 +363,6 @@
             .lang-toggle { align-self: stretch; }
         }
 
-        /* ===== SCROLLBAR ===== */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
@@ -412,37 +397,51 @@
 
     <!-- BOARD -->
     <div class="board" id="board">
-        <div class="cell" data-index="0"><div class="cell-glow"></div></div>
-        <div class="cell" data-index="1"><div class="cell-glow"></div></div>
-        <div class="cell" data-index="2"><div class="cell-glow"></div></div>
-        <div class="cell" data-index="3"><div class="cell-glow"></div></div>
-        <div class="cell" data-index="4"><div class="cell-glow"></div></div>
-        <div class="cell" data-index="5"><div class="cell-glow"></div></div>
-        <div class="cell" data-index="6"><div class="cell-glow"></div></div>
-        <div class="cell" data-index="7"><div class="cell-glow"></div></div>
-        <div class="cell" data-index="8"><div class="cell-glow"></div></div>
+        <div class="cell" data-index="0"></div>
+        <div class="cell" data-index="1"></div>
+        <div class="cell" data-index="2"></div>
+        <div class="cell" data-index="3"></div>
+        <div class="cell" data-index="4"></div>
+        <div class="cell" data-index="5"></div>
+        <div class="cell" data-index="6"></div>
+        <div class="cell" data-index="7"></div>
+        <div class="cell" data-index="8"></div>
     </div>
 
     <!-- STATUS -->
     <div class="status turn" id="status">نوبت بازیکن ۱ (❌)</div>
 
-    <!-- SCORE -->
-    <div class="score">
-        <div class="score-item x-score">❌ <span class="num" id="xScore">0</span></div>
-        <div class="score-item draw-score">🤝 <span class="num" id="drawScore">0</span></div>
-        <div class="score-item o-score">⭕ <span class="num" id="oScore">0</span></div>
+    <!-- SCORE 2-PLAYER -->
+    <div class="score-section active" id="score2p">
+        <div class="score-title">🔒 👥 امتیازات دو نفره</div>
+        <div class="score">
+            <div class="score-item x-score">❌ برد <span class="num" id="xScore2p">0</span></div>
+            <div class="score-item draw-score">🤝 مساوی <span class="num" id="drawScore2p">0</span></div>
+            <div class="score-item o-score">⭕ باخت <span class="num" id="oScore2p">0</span></div>
+            <div class="score-item points">⭐ امتیاز شما <span class="num" id="points2p">0</span></div>
+        </div>
+    </div>
+
+    <!-- SCORE ROBOT -->
+    <div class="score-section" id="scoreRobot">
+        <div class="score-title">🔒 🤖 امتیازات با ربات</div>
+        <div class="score">
+            <div class="score-item x-score">❌ برد <span class="num" id="xScoreRobot">0</span></div>
+            <div class="score-item draw-score">🤝 مساوی <span class="num" id="drawScoreRobot">0</span></div>
+            <div class="score-item o-score">⭕ باخت <span class="num" id="oScoreRobot">0</span></div>
+            <div class="score-item points">⭐ امتیاز شما <span class="num" id="pointsRobot">0</span></div>
+        </div>
     </div>
 
     <!-- ACTIONS -->
     <div class="actions">
         <button class="btn btn-primary" id="resetBtn">🔄 <span id="resetLabel">بازی جدید</span></button>
-        <button class="btn btn-secondary" id="clearBtn">🗑️ <span id="clearLabel">صفر کردن امتیاز</span></button>
     </div>
 </div>
 
 <script>
     // ============================================================
-    //  GAME LOGIC WITH LOCALSTORAGE
+    //  LANGUAGE DATA
     // ============================================================
     const LANG = {
         fa: {
@@ -459,10 +458,11 @@
             turnYou: 'نوبت شما (❌)',
             turnRobot: 'نوبت ربات (⭕)',
             reset: 'بازی جدید',
-            clear: 'صفر کردن امتیاز',
             mode2p: '👥 ۲ نفره',
             modeRobot: '🤖 با ربات',
-            langLabel: '🇬🇧 English'
+            langLabel: '🇬🇧 English',
+            robotWin: '🤖 ربات برنده شد!',
+            youWin: '🎉 شما برنده شدید!'
         },
         en: {
             title: 'Tic-Tac-Toe',
@@ -478,10 +478,11 @@
             turnYou: "Your turn (❌)",
             turnRobot: "Robot's turn (⭕)",
             reset: 'New Game',
-            clear: 'Reset Scores',
             mode2p: '👥 2 Players',
             modeRobot: '🤖 vs Robot',
-            langLabel: '🇮🇷 فارسی'
+            langLabel: '🇮🇷 فارسی',
+            robotWin: '🤖 Robot won!',
+            youWin: '🎉 You won!'
         }
     };
 
@@ -491,11 +492,14 @@
     let board = ['', '', '', '', '', '', '', '', ''];
     let currentPlayer = 'X';
     let gameActive = true;
-    let scores = { X: 0, O: 0, draw: 0 };
     let isRobotThinking = false;
     let gameOverFlag = false;
 
-    const STORAGE_KEY = 'tictactoe_data';
+    // امتیازات جداگانه
+    let scores2p = { X: 0, O: 0, draw: 0, pointsX: 0 };
+    let scoresRobot = { X: 0, O: 0, draw: 0, pointsX: 0 };
+
+    const STORAGE_KEY = 'tictactoe_permanent_v3';
 
     // ===== DOM REFS =====
     const cells = document.querySelectorAll('.cell');
@@ -503,17 +507,26 @@
     const turnSymbol = document.getElementById('turnSymbol');
     const turnBadge = document.getElementById('turnBadge');
     const turnLabel = document.getElementById('turnLabel');
-    const xScoreEl = document.getElementById('xScore');
-    const oScoreEl = document.getElementById('oScore');
-    const drawScoreEl = document.getElementById('drawScore');
     const resetBtn = document.getElementById('resetBtn');
-    const clearBtn = document.getElementById('clearBtn');
     const langToggle = document.getElementById('langToggle');
     const mode2p = document.getElementById('mode2p');
     const modeRobot = document.getElementById('modeRobot');
     const mainTitle = document.getElementById('mainTitle');
     const resetLabel = document.getElementById('resetLabel');
-    const clearLabel = document.getElementById('clearLabel');
+
+    // المان‌های امتیازات
+    const score2pSection = document.getElementById('score2p');
+    const scoreRobotSection = document.getElementById('scoreRobot');
+    
+    const xScore2p = document.getElementById('xScore2p');
+    const oScore2p = document.getElementById('oScore2p');
+    const drawScore2p = document.getElementById('drawScore2p');
+    const points2p = document.getElementById('points2p');
+
+    const xScoreRobot = document.getElementById('xScoreRobot');
+    const oScoreRobot = document.getElementById('oScoreRobot');
+    const drawScoreRobot = document.getElementById('drawScoreRobot');
+    const pointsRobot = document.getElementById('pointsRobot');
 
     const winPatterns = [
         [0,1,2], [3,4,5], [6,7,8],
@@ -522,24 +535,16 @@
     ];
 
     // ============================================================
-    //  LOCALSTORAGE
+    //  LOCALSTORAGE - دائمی
     // ============================================================
     function saveGame() {
         const data = {
-            lang,
-            gameMode,
-            board,
-            currentPlayer,
-            gameActive,
-            scores,
-            gameOverFlag,
-            timestamp: Date.now()
+            lang, gameMode, board, currentPlayer, gameActive, gameOverFlag,
+            scores2p, scoresRobot
         };
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        } catch (e) {
-            // ignore
-        }
+        } catch (e) {}
     }
 
     function loadGame() {
@@ -547,23 +552,16 @@
             const raw = localStorage.getItem(STORAGE_KEY);
             if (!raw) return false;
             const data = JSON.parse(raw);
-            
             lang = data.lang || 'fa';
             gameMode = data.gameMode || '2player';
             board = data.board || ['', '', '', '', '', '', '', '', ''];
             currentPlayer = data.currentPlayer || 'X';
             gameActive = data.gameActive !== undefined ? data.gameActive : true;
-            scores = data.scores || { X: 0, O: 0, draw: 0 };
             gameOverFlag = data.gameOverFlag || false;
-            
+            scores2p = data.scores2p || { X: 0, O: 0, draw: 0, pointsX: 0 };
+            scoresRobot = data.scoresRobot || { X: 0, O: 0, draw: 0, pointsX: 0 };
             return true;
-        } catch (e) {
-            return false;
-        }
-    }
-
-    function clearSavedGame() {
-        localStorage.removeItem(STORAGE_KEY);
+        } catch (e) { return false; }
     }
 
     // ============================================================
@@ -578,7 +576,6 @@
         turnLabel.textContent = t('turn');
         langToggle.textContent = t('langLabel');
         resetLabel.textContent = t('reset');
-        clearLabel.textContent = t('clear');
         mode2p.textContent = t('mode2p');
         modeRobot.textContent = t('modeRobot');
         updateUI();
@@ -593,13 +590,24 @@
     });
 
     // ============================================================
-    //  MODE
+    //  MODE - نمایش امتیازات مربوطه
     // ============================================================
+    function updateScoreVisibility() {
+        if (gameMode === '2player') {
+            score2pSection.classList.add('active');
+            scoreRobotSection.classList.remove('active');
+        } else {
+            score2pSection.classList.remove('active');
+            scoreRobotSection.classList.add('active');
+        }
+    }
+
     [mode2p, modeRobot].forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             gameMode = btn.dataset.mode;
+            updateScoreVisibility();
             resetGame();
             saveGame();
         });
@@ -626,11 +634,13 @@
 
         if (gameMode === 'robot' && gameActive && !gameOverFlag && currentPlayer === 'O') {
             isRobotThinking = true;
+            document.querySelector('.board').classList.add('robot-thinking');
             setTimeout(() => {
                 robotMove();
                 isRobotThinking = false;
+                document.querySelector('.board').classList.remove('robot-thinking');
                 saveGame();
-            }, 450);
+            }, 500);
         }
     }
 
@@ -668,16 +678,41 @@
     function endGame(winner) {
         gameActive = false;
         gameOverFlag = true;
-        if (winner === 'draw') {
-            scores.draw++;
-            statusEl.className = 'status draw';
-            statusEl.textContent = t('draw');
+        
+        if (gameMode === '2player') {
+            if (winner === 'draw') {
+                scores2p.draw++;
+                scores2p.pointsX += 1;
+                statusEl.className = 'status draw';
+                statusEl.textContent = t('draw');
+            } else if (winner === 'X') {
+                scores2p.X++;
+                scores2p.pointsX += 3;
+                statusEl.className = 'status win';
+                statusEl.textContent = `${t('win')} ${t('player1')}`;
+            } else {
+                scores2p.O++;
+                statusEl.className = 'status win';
+                statusEl.textContent = `${t('win')} ${t('player2')}`;
+            }
         } else {
-            scores[winner]++;
-            const name = winner === 'X' ? t('player1') : (gameMode === 'robot' ? t('robot') : t('player2'));
-            statusEl.className = 'status win';
-            statusEl.textContent = `${t('win')} ${name}`;
+            if (winner === 'draw') {
+                scoresRobot.draw++;
+                scoresRobot.pointsX += 1;
+                statusEl.className = 'status draw';
+                statusEl.textContent = t('draw');
+            } else if (winner === 'X') {
+                scoresRobot.X++;
+                scoresRobot.pointsX += 3;
+                statusEl.className = 'status win';
+                statusEl.textContent = t('youWin');
+            } else {
+                scoresRobot.O++;
+                statusEl.className = 'status win';
+                statusEl.textContent = t('robotWin');
+            }
         }
+        
         updateScore();
         updateUI();
         cells.forEach(c => c.classList.add('game-over'));
@@ -689,9 +724,6 @@
         const symbol = player === 'X' ? '❌' : '⭕';
         turnSymbol.textContent = symbol;
 
-        let label = '';
-        let badgeClass = player === 'X' ? 'x-badge' : 'o-badge';
-
         if (gameOverFlag) {
             turnBadge.textContent = statusEl.textContent.includes('Draw') || statusEl.textContent.includes('مساوی') ? '🤝' : '🏆';
             turnBadge.className = 'badge';
@@ -700,21 +732,18 @@
 
         if (gameMode === '2player') {
             const name = player === 'X' ? t('player1') : t('player2');
-            label = `${name} (${symbol})`;
-            turnBadge.textContent = label;
-            turnBadge.className = `badge ${badgeClass}`;
+            turnBadge.textContent = `${name} (${symbol})`;
+            turnBadge.className = `badge ${player === 'X' ? 'x-badge' : 'o-badge'}`;
             statusEl.className = 'status turn';
             statusEl.textContent = player === 'X' ? t('turnP1') : t('turnP2');
         } else {
             if (player === 'X') {
-                label = `${t('you')} (❌)`;
-                turnBadge.textContent = label;
+                turnBadge.textContent = `${t('you')} (❌)`;
                 turnBadge.className = 'badge x-badge';
                 statusEl.className = 'status turn';
                 statusEl.textContent = t('turnYou');
             } else {
-                label = `${t('robot')} (⭕)`;
-                turnBadge.textContent = label;
+                turnBadge.textContent = `${t('robot')} (⭕)`;
                 turnBadge.className = 'badge o-badge';
                 statusEl.className = 'status turn';
                 statusEl.textContent = t('turnRobot');
@@ -723,56 +752,80 @@
     }
 
     function updateScore() {
-        xScoreEl.textContent = scores.X;
-        oScoreEl.textContent = scores.O;
-        drawScoreEl.textContent = scores.draw;
+        xScore2p.textContent = scores2p.X;
+        oScore2p.textContent = scores2p.O;
+        drawScore2p.textContent = scores2p.draw;
+        points2p.textContent = scores2p.pointsX;
+
+        xScoreRobot.textContent = scoresRobot.X;
+        oScoreRobot.textContent = scoresRobot.O;
+        drawScoreRobot.textContent = scoresRobot.draw;
+        pointsRobot.textContent = scoresRobot.pointsX;
     }
 
     // ============================================================
-    //  ROBOT
+    //  MINIMAX - ربات شکست‌ناپذیر
     // ============================================================
+    function minimax(board, depth, isMaximizing) {
+        if (checkWinMini('O')) return 10 - depth;
+        if (checkWinMini('X')) return depth - 10;
+        if (board.every(c => c !== '')) return 0;
+
+        if (isMaximizing) {
+            let best = -Infinity;
+            for (let i = 0; i < 9; i++) {
+                if (board[i] === '') {
+                    board[i] = 'O';
+                    best = Math.max(best, minimax(board, depth + 1, false));
+                    board[i] = '';
+                }
+            }
+            return best;
+        } else {
+            let best = Infinity;
+            for (let i = 0; i < 9; i++) {
+                if (board[i] === '') {
+                    board[i] = 'X';
+                    best = Math.min(best, minimax(board, depth + 1, true));
+                    board[i] = '';
+                }
+            }
+            return best;
+        }
+    }
+
+    function checkWinMini(player) {
+        return winPatterns.some(pattern => pattern.every(idx => board[idx] === player));
+    }
+
     function robotMove() {
         if (!gameActive || gameOverFlag) return;
         if (currentPlayer !== 'O') return;
         if (board.every(cell => cell !== '')) return;
 
-        const empty = board.map((v, i) => v === '' ? i : null).filter(v => v !== null);
-        if (empty.length === 0) return;
+        let bestScore = -Infinity;
+        let bestMove = -1;
 
-        // 1 - Win
-        for (let idx of empty) {
-            board[idx] = 'O';
-            if (checkWin('O')) {
-                board[idx] = '';
-                makeMove(idx);
-                return;
-            }
-            board[idx] = '';
-        }
-
-        // 2 - Block
-        for (let idx of empty) {
-            board[idx] = 'X';
-            if (checkWin('X')) {
-                board[idx] = '';
-                makeMove(idx);
-                return;
-            }
-            board[idx] = '';
-        }
-
-        // 3 - Center
-        if (board[4] === '') { makeMove(4); return; }
-
-        // 4 - Corners
-        const corners = [0,2,6,8].filter(i => board[i] === '');
-        if (corners.length > 0) {
-            makeMove(corners[Math.floor(Math.random() * corners.length)]);
+        if (board.every(c => c === '')) {
+            makeMove(4);
             return;
         }
 
-        // 5 - Any
-        makeMove(empty[Math.floor(Math.random() * empty.length)]);
+        for (let i = 0; i < 9; i++) {
+            if (board[i] === '') {
+                board[i] = 'O';
+                let score = minimax(board, 0, false);
+                board[i] = '';
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestMove = i;
+                }
+            }
+        }
+
+        if (bestMove !== -1) {
+            makeMove(bestMove);
+        }
     }
 
     // ============================================================
@@ -788,24 +841,14 @@
         cells.forEach(cell => {
             cell.textContent = '';
             cell.className = 'cell';
-            const glow = cell.querySelector('.cell-glow');
-            if (glow) cell.appendChild(glow);
         });
 
         statusEl.className = 'status turn';
         updateUI();
-        updateScore();
         saveGame();
     }
 
     resetBtn.addEventListener('click', resetGame);
-
-    clearBtn.addEventListener('click', () => {
-        scores = { X: 0, O: 0, draw: 0 };
-        updateScore();
-        clearSavedGame();
-        resetGame();
-    });
 
     // ============================================================
     //  RESTORE BOARD FROM SAVE
@@ -823,18 +866,10 @@
                 cell.textContent = '';
                 cell.className = 'cell';
             }
-            // re-add glow
-            if (!cell.querySelector('.cell-glow')) {
-                const glow = document.createElement('div');
-                glow.className = 'cell-glow';
-                cell.appendChild(glow);
-            }
         });
 
-        // Check for winner
         if (gameOverFlag) {
             cells.forEach(c => c.classList.add('game-over'));
-            // Find winner cells
             ['X', 'O'].forEach(player => {
                 winPatterns.forEach(pattern => {
                     if (pattern.every(idx => board[idx] === player)) {
@@ -852,6 +887,7 @@
         }
         updateUI();
         updateScore();
+        updateScoreVisibility();
     }
 
     // ============================================================
@@ -860,12 +896,10 @@
     function init() {
         const loaded = loadGame();
         
-        // Set mode buttons
         document.querySelectorAll('.mode-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.mode === gameMode);
         });
 
-        // Set language
         document.documentElement.lang = lang;
         document.documentElement.dir = lang === 'fa' ? 'rtl' : 'ltr';
 
@@ -876,9 +910,10 @@
         }
         
         updateLanguage();
+        updateScoreVisibility();
     }
 
     init();
 </script>
 </body>
-  </html>
+</html>
